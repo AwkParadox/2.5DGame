@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCEscape</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="MCEscape.css">
+</head>
+
+<body>
+
+    <div class="backgroundMainMenu" id="backgroundmainmenu" style="display: show;"></div>
+    <audio id='bgmusic' autoplay loop>
+        <source id='bgsrc' src="audios/mcmusic.mp3" type="audio/mpeg">
+    </audio>
+    <div class="mainMenu" id="menuscreen" style="display: show;">
+
+        <div class="logo"></div>
+        <div class="mn1">
+            <div class="mainBtn" onclick="all_loaded();">
+                <div class="textBtn">
+                    Start Game
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="splash" style="display: none;">
+        <center>
+            <img src="splash.gif">
+        </center>
+    </div>
+    <div id="gameplayscreen" style="display: none;">
+        <canvas id='mycanvas' style="border:0px solid #000000;background-image: url();">
+        </canvas>
+        <div class="sign">
+            <p id="line1"></p>
+            <p id="line2"></p>
+            <p id="line3">'M' = Map | 'Q' = Backflip | 'E' = Frontflip</p>
+            <p id="line4"></p>
+        </div>
+
+    </div>
+    <div id="leaderboard">
+
+    </div>
+
+
+
+
+
+
+    <script>
+        const canvas = document.querySelector("canvas");
+        var cieling = new Image();
+        cieling.src = 'testcieling.jpg';
+        var floor = new Image();
+        floor.src = 'outsideimg/floor.png'
+        var map = new Image();
+        map.src = 'floor1img/F1Map.png'
+        const up_arrow = 38;
+        const down_arrow = 40;
+        const left_arrow = 37;
+        const right_arrow = 39;
+        var audio = document.getElementById('bgmusic');
+        var audiosrc = document.getElementById('bgsrc');
+
+        var cur_pos_x = 0;
+        var cur_pos_y = 0;
+        var facing = 39456;
+        var loaded = 0;
+        var rotate = 0;
+        var out = 0
+        var f1 = 0
+        var f2 = 0
+
+        var current_state;
+        var game_data;
+
+        var lockinput = 0;
+        var mapdisplay = 0;
+        var bflipcounter = 0;
+        fflipcounter = 0;
+        var creep1 = 0;
+        var creep2 = 0;
+        var creep3 = 0;
+        var creep4 = 0;
+        var creep5 = 0;
+        var total_creepf1 = 0;
+
+        var total_seconds_counter = 0;
+        var total_seconds = 0;
+        var total_min = 0;
+        var total_hour = 0;
+        var record_seconds;
+        var record_min;
+        var record_hour;
+
+        function resize() {
+            canvas.width = window.innerWidth - 360;
+            canvas.height = window.innerHeight - 200;
+        }
+        resize()
+        window.addEventListener('resize', resize)
+
+        $.getJSON("MCEscape.json", function (data) {
+            game_data = data;
+            current_state = data['start_state'];
+            load_imgs();
+
+        });
+
+
+        function all_loaded() {
+            $('#backgroundmainmenu').hide();
+            $('#menuscreen').hide();
+            $('#splash').show();
+            $('body').attr('style', 'background: #9fb7bd;')
+
+            setTimeout(function () {
+                const timer = setInterval(function () {
+                    total_seconds_counter++;
+                    total_seconds = (total_seconds_counter % 60).toFixed(0)
+                    total_seconds = total_seconds < 10 ? '0' + total_seconds : total_seconds;
+                    total_min = (total_seconds_counter / 60).toFixed(0);
+                    total_min = total_min < 10 ? '0' + total_min : total_min;
+                    total_hour = (total_seconds_counter / 3600).toFixed(0);
+                    total_hour = total_hour < 10 ? '0' + total_hour : total_hour;
+                    console.log(total_seconds / 60);
+                    $('#line2').html('Time: ' + total_hour + ':' + total_min + ':' + total_seconds)
+                }, 1000);
+                next_state('00-out')
+                audiosrc.src = 'audios/bgmusic.mp3'
+                audio.volume = .05
+                audio.load();
+                
+            }, 3000)
+        }
+
+        function load_imgs() {
+            for (var key in game_data['states']) {
+                for (let i = 0; i < 4; i++) {
+                    if (game_data['states'][key]['img'][i]['ss'] != null) {
+                        console.log(key, game_data['states'][key]['img'][i]['ss']);
+                        game_data['states'][key]['img'][i]['img_loaded'] = new Image();
+                        game_data['states'][key]['img'][i]['img_loaded'].src = game_data['states'][key]['img'][i]['ss'];
+                    }
+                }
+
+            }
+            loaded = 1;
+        }
+
+        function backflip() {
+            lockinput = 1;
+            bflipcounter++;
+            draw(cieling);
+            setTimeout(function () {
+                rotate = 1;
+                draw(game_data['states'][current_state]['img'][((facing + 2) % 4)]['img_loaded']);
+                rotate = 0;
+            }
+                , 250);
+            setTimeout(function () { draw(floor); }
+                , 750);
+            setTimeout(function () {
+                draw(game_data['states'][current_state]['img'][facing % 4]['img_loaded']);
+                lockinput = 0;
+            }
+                , 1250);
+        }
+        function frontflip() {
+            lockinput = 1;
+            fflipcounter++;
+            draw(floor);
+            setTimeout(function () {
+                rotate = 1;
+                draw(game_data['states'][current_state]['img'][((facing + 2) % 4)]['img_loaded']);
+                rotate = 0;
+            }
+                , 250);
+            setTimeout(function () {
+                draw(cieling);
+            }
+                , 750);
+            setTimeout(function () {
+                draw(game_data['states'][current_state]['img'][facing % 4]['img_loaded']);
+                lockinput = 0;
+            }
+                , 1250);
+        }
+
+        document.body.onkeydown = function (e) {
+            key_input(e.keyCode)
+        };
+
+        function key_input(what_key) {
+            if (lockinput == 0) {
+                if (what_key == up_arrow) {
+                    next_state(game_data['states'][current_state]['img'][facing % 4]['next_state']);
+                }
+                else if (what_key == right_arrow) {
+                    facing++;
+                    next_state(current_state);
+                }
+                else if (what_key == down_arrow) {
+                    facing += 2;
+                    next_state(current_state);
+
+                }
+                else if (what_key == left_arrow) {
+                    facing--;
+                    next_state(current_state);
+                }
+                else if (what_key == 81) {
+                    backflip();
+                }
+                else if (what_key == 69) {
+                    frontflip();
+                }
+                else if (what_key == 77) {
+                    display_map();
+                }
+                else if (what_key == 76) {
+
+                }
+            }
+            else if (lockinput == 1) {
+                if (what_key == 77) {
+                    lockinput = 0;
+                    next_state(current_state);
+                }
+            }
+
+            console.log(what_key);
+        }
+
+        function display_map() {
+            lockinput = 1
+            if (out == 1) {
+                map.src = 'outsideimg/outsidemap.png';
+                draw(map);
+            }
+            else if (f1 == 1) {
+                map.src = 'floor1img/F1Map.png';
+                draw(map);
+            }
+            else if (f2 == 1) {
+
+            }
+
+        }
+        function updatecreep() {
+            total_creepf1 = creep1 + creep2 + creep3 + creep4 + creep5
+
+            if (f1 == 1) {
+                $('#line1').html("Floor 1");
+                floor.src = 'floor1img/floor.png'
+                $('#line4').html("Creeper heads found: " + total_creepf1 + "/" + "5")
+            }
+
+            if (total_creepf1 == 5) {
+                record_seconds = total_seconds;
+                record_min = total_min;
+                record_hour = total_hour;
+                var record = total_hour + ":" + total_min + ":" + total_seconds
+                //var listing = {name:'Ton',time:'record'}
+                console.log(record)
+                $('#line3').html("Record: " + record)
+                audiosrc.src = 'audios/win.mp3'
+                audio.load();
+                setTimeout(function(){
+                    audiosrc.src = 'audios/bgmusic.mp3'
+                audio.volume = .05
+                audio.load();
+                },3000)
+
+            }
+
+        }
+        function next_state(state) {
+            console.log("Current State = " + current_state + " --> New State= " + state);
+            if (state != "") {
+                current_state = state;
+            }
+            if (current_state != 'mainmenu') {
+                $('#backgroundmainmenu').hide();
+                $('#menuscreen').hide();
+                $('#gameplayscreen').show();
+                $('#splash').hide();
+                //$('body').attr('style', 'background-color: #000000;')
+            }
+            else if (current_state == 'mainmenu') {
+                $('#backgroundmainmenu').show();
+                $('#menuscreen').show();
+                $('#gameplayscreen').hide();
+            }
+
+            if (current_state == '00-out' || current_state == '10-out') {
+                out = 1;
+                f1 = 0;
+                f2 = 0;
+                $('#line1').html("Outside Luigi's Mansion")
+                floor.src = 'outsideimg/floor.png'
+                $('body').attr('style', 'background-image: url("bg.gif")');
+            }
+            else if (current_state == '00-f1' || current_state == '68-f1') {
+                out = 0;
+                f1 = 1;
+                f2 = 0;
+                $('#line1').html("Floor 1")
+                floor.src = 'floor1img/floor.png'
+                $('#line4').html("Creeper heads found: " + total_creepf1 + "/" + "5")
+                //$('body').attr('style','background-image: url("floor1img/f1bg.png")')
+            }
+            else if (current_state == '69-f1') {
+                floor.src = 'floor1img/toiletfloor.png'
+            }
+
+            if (current_state == '14-f1' && facing % 4 == 2) {
+                creep1 = 1;
+                updatecreep();
+            }
+            if (current_state == '22-f1' && facing % 4 == 1) {
+                creep2 = 1;
+                updatecreep();
+            }
+            if (current_state == '27-f1' && facing % 4 == 2) {
+                creep3 = 1;
+                updatecreep();
+            }
+            if (current_state == '37-f1' && facing % 4 == 3) {
+                creep4 = 1;
+                updatecreep();
+            }
+            if (current_state == '51-f1' && facing % 4 == 0) {
+                creep5 = 1;
+                updatecreep();
+            }
+
+            if (current_state != "") {
+                if (facing % 4 == 0) {
+                    draw(game_data['states'][current_state]['img'][facing % 4]['img_loaded']);
+                }
+                else if (facing % 4 == 1) {
+                    draw(game_data['states'][current_state]['img'][facing % 4]['img_loaded']);
+                }
+                else if (facing % 4 == 2) {
+                    draw(game_data['states'][current_state]['img'][facing % 4]['img_loaded']);
+                }
+                else if (facing % 4 == 3) {
+                    draw(game_data['states'][current_state]['img'][facing % 4]['img_loaded']);
+                }
+
+            }
+        }
+
+        function draw(img) {
+            var ctx = canvas.getContext('2d');
+            const scaleWidth = canvas.width / img.width;
+            const scaleHeight = canvas.height / img.height;
+            const scaleFactor = Math.min(scaleWidth, scaleHeight);
+
+            const newWidth = img.width * scaleFactor;
+            const newHeight = img.height * scaleFactor;
+            const x = (canvas.width - newWidth) / 2;
+            const y = (canvas.height - newHeight) / 2;
+
+            if (rotate == 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                ctx.drawImage(img, x, y, newWidth, newHeight);
+            }
+            else if (rotate == 1) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                ctx.save();
+                ctx.translate(canvas.width, canvas.height); // Translate to the center of the canvas
+                ctx.rotate(Math.PI); // Rotate 180 degrees (π radians) around the center
+
+                ctx.drawImage(img, x, y, newWidth, newHeight);
+                ctx.restore();
+            }
+            //matchpic(newWidth, newHeight)
+        }
+
+
+    </script>
+
+</body>
+
+</html>

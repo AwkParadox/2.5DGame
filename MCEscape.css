@@ -1,0 +1,161 @@
+@font-face {
+  font-family: Minecraftia;
+  src: url(Minecraftia.ttf);
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  flex-direction: col;
+  width: 100%;
+  height: 100%;
+}
+
+#btnAudioClick {
+  visibility: hidden;
+}
+
+.mainBtn {
+  width: 100%;
+  margin-bottom: 10px;
+  max-width: 400px;
+}
+
+.textBtn {
+  padding: 10px;
+}
+
+button[type="submit"],
+button[type="button"],
+button[type="reset"],
+button[type="submit"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="submit"],
+.mainBtn,
+.secondBtn {
+  border: 2px solid #000;
+  box-shadow: inset -2px -4px #0006, inset 2px 2px #FFF7;
+  background: #999 url('btnbackground.png');
+  background-size: cover;
+  background-position: center;
+  color: #DDD;
+  font-weight: 100;
+  text-align: center;
+  font-size: 12px;
+  cursor: context-menu;
+  image-rendering: pixelated;
+}
+
+.mainBtn:hover .textBtn,
+.secondBtn:hover .textBtn {
+  background-color: rgba(100, 100, 255, .45);
+  height: 100%;
+  width: 95%;
+  z-index: 5;
+  color: #ffff7c;
+}
+
+.mainMenu {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+  max-width: 400px;
+}
+
+.mn1 {
+  width: 100%;
+  height: 80%;
+}
+
+.mn2 {
+  width: 100%;
+  height: 20%;
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.secondBtn {
+  width: 50%;
+  max-width: 197px;
+}
+
+.backgroundMainMenu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  animation: background-image-animation 165s linear infinite;
+  transform: translateX(0) scale(1.1);
+  background: url('mcbackground.jpg') repeat-x center center;
+  background-size: cover;
+  opacity: 0.8;
+}
+
+@keyframes background-image-animation {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: -4096px 0;
+  }
+}
+
+@keyframes fadeInAnimation {
+  0% {
+      opacity: 0;
+  }
+  100% {
+      opacity: 1;
+  }
+}
+
+canvas {
+  animation: fadeInAnimation ease 3s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+.logo {
+  background-image: url('title.png');
+  width: 100%;
+  height: 150px;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-bottom: 5%;
+  margin-top: 10%;
+  image-rendering: pixelated;
+}
+
+.sign {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: auto;
+  padding-top: 6px;
+  margin: auto;
+  cursor: pointer;
+  background-image: url("signbg.png");
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  height: auto;
+  width: 80%;
+}
+p {
+  font-family:"mc";
+  line-height: 22px;
+  font-size: 16px; /* 18 is better but looks blurred */
+  font-weight: 550;
+  margin: auto;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+}
